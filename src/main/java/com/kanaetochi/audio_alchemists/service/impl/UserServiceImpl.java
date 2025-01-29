@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService{
             .email(registerDto.getEmail())
             .password(registerDto.getPassword())
             .username(registerDto.getUsername())
-            .role(Role.USER)
+            .role(Role.valueOf(registerDto.getRole()))
             .build();
         ;
 		user.setPassword(passwordEncoder.encode(user.getPassword()));
