@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class UserController {
     private final UserService userService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping
     public List<User> getAllUsers() {
         return userService.getAllUsers();
