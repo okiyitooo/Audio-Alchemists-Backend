@@ -29,7 +29,8 @@ public class UserServiceImpl implements UserService{
 		User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User with id "+ id+" not found"));
         user.setUsername(userDetails.getUsername());
         user.setEmail(userDetails.getEmail());
-		user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+		if(userDetails.getPassword()!=null)
+			user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
         user.setRole(userDetails.getRole());
         userRepository.save(user);
         return user;
