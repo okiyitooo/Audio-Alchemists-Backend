@@ -26,8 +26,8 @@ public class ProjectController {
     private final ProjectService projectService;
 
     @PostMapping
-    public ResponseEntity<Project> createProject(@RequestBody Project projectDetails, @RequestParam Long id) {
-        Project project = projectService.createProject(projectDetails, id);
+    public ResponseEntity<Project> createProject(@RequestBody Project projectDetails, @RequestParam Long userId) {
+        Project project = projectService.createProject(projectDetails, userId);
         URI uri = URI.create("/projects/" + project.getId());
         return ResponseEntity.created(uri).body(project);
     }

@@ -27,8 +27,8 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
-	public Project createProject(Project project, Long id) {
-		User user = userRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("User not found with id: " + id));
+	public Project createProject(Project project, Long userId) {
+		User user = userRepository.findById(userId).orElseThrow(()-> new ResourceNotFoundException("User not found with id: " + userId));
         project.setOwner(user);
         return projectRepository.save(project);
 	}
