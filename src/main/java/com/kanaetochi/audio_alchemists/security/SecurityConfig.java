@@ -46,20 +46,20 @@ public class SecurityConfig {
                         // Project related endpoints:
                         .requestMatchers(HttpMethod.GET,"/projects").authenticated()  // any authenticated user can get all projects
                         .requestMatchers(HttpMethod.GET,"/projects/{id}").authenticated()  // any authenticated user can get a project by ID
-                        .requestMatchers(HttpMethod.POST, "/projects").hasRole("COMPOSER") // only composer can create projects.
-                        .requestMatchers(HttpMethod.PUT, "/projects/{id}").hasRole("COMPOSER")// only composers can update their projects.
-                        .requestMatchers(HttpMethod.DELETE, "/projects/{id}").hasRole("COMPOSER") // Only composers can delete projects.
+                        .requestMatchers(HttpMethod.POST, "/projects").hasAnyAuthority("COMPOSER", "ADMIN") // only composer can create projects.
+                        .requestMatchers(HttpMethod.PUT, "/projects/{id}").hasAnyAuthority("COMPOSER", "ADMIN")// only composers can update their projects.
+                        .requestMatchers(HttpMethod.DELETE, "/projects/{id}").hasAnyAuthority("COMPOSER", "ADMIN") // Only composers can delete projects.
 
                         // Track related endpoints:
                         .requestMatchers(HttpMethod.GET,"/projects/{projectId}/tracks").authenticated() // Any authenticated user can get tracks for a project.
                         .requestMatchers(HttpMethod.GET, "/projects/{projectId}/tracks/{id}").authenticated()// Any authenticated user can get a track.
-                        .requestMatchers(HttpMethod.POST, "/projects/{projectId}/tracks").hasRole("COMPOSER") // only composers can add tracks
-                        .requestMatchers(HttpMethod.PUT, "/projects/{projectId}/tracks/{id}").hasRole("COMPOSER") // Only composers can update their tracks.
-                        .requestMatchers(HttpMethod.DELETE,"/projects/{projectId}/tracks/{id}").hasRole("COMPOSER")// only composers can delete their tracks.
+                        .requestMatchers(HttpMethod.POST, "/projects/{projectId}/tracks").hasAnyAuthority("COMPOSER", "ADMIN") // only composers can add tracks
+                        .requestMatchers(HttpMethod.PUT, "/projects/{projectId}/tracks/{id}").hasAnyAuthority("COMPOSER", "ADMIN") // Only composers can update their tracks.
+                        .requestMatchers(HttpMethod.DELETE,"/projects/{projectId}/tracks/{id}").hasAnyAuthority("COMPOSER", "ADMIN")// only composers can delete their tracks.
                         // Admin related endpoints:
-                        .requestMatchers(HttpMethod.GET,"/users").hasRole("ADMIN")// only admins can get all users.
-                        .requestMatchers(HttpMethod.PUT,"/users/{id}").hasRole("ADMIN") // only admins can update users.
-                        .requestMatchers(HttpMethod.DELETE,"/users/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/users").hasAnyAuthority("ADMIN")// only admins can get all users.
+                        .requestMatchers(HttpMethod.PUT,"/users/{id}").hasAnyAuthority("ADMIN") // only admins can update users.
+                        .requestMatchers(HttpMethod.DELETE,"/users/{id}").hasAnyAuthority("ADMIN")
                         .anyRequest().authenticated() // any authenticated user can access any other endpoint.
                 )
             .sessionManagement(session ->  session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

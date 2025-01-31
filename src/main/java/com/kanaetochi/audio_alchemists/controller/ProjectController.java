@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kanaetochi.audio_alchemists.model.Project;
+import com.kanaetochi.audio_alchemists.model.User;
 import com.kanaetochi.audio_alchemists.service.ProjectService;
 
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,7 +28,11 @@ public class ProjectController {
     private final ProjectService projectService;
 
     @PostMapping
-    public ResponseEntity<Project> createProject(@RequestBody Project projectDetails, @RequestParam Long userId) {
+    public ResponseEntity<Project> createProject(@RequestBody Project projectDetails, @AuthenticationPrincipal User autheticatedUser) {
+        if (autheticatedUser == null) {
+            return ResponseEntity.status(401).build();
+        }
+        Long userId = autheticatedUser.getId();
         Project project = projectService.createProject(projectDetails, userId);
         URI uri = URI.create("/projects/" + project.getId());
         return ResponseEntity.created(uri).body(project);
