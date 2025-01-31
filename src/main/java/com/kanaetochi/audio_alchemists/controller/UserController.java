@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -48,6 +49,19 @@ public class UserController {
         } catch (ResourceNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<User> updateCurrentUser(@AuthenticationPrincipal User authenticatedUser, @RequestBody User userDetails){
+        if (authenticatedUser == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        } 
+        // Only allow updating the role if the authenticated user is an admin
+        if (userDetails.getRole() != null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        User updatedUser = userService.updateUser(authenticatedUser.getId(), userDetails);
+        return  new ResponseEntity<>(updatedUser, HttpStatus.OK);
     }
 
 

@@ -3,6 +3,7 @@ package com.kanaetochi.audio_alchemists.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -39,8 +40,27 @@ public class SecurityConfig {
                 exceptionHandling.authenticationEntryPoint(jwtAuthEntryPoint))
             .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/users/**").hasAnyAuthority("ADMIN")
-                        .anyRequest().authenticated()
+                        // User related endpoints:
+                        .requestMatchers(HttpMethod.GET, "/users/{id}").authenticated() // Any authenticated user can get a user by ID.
+                        .requestMatchers(HttpMethod.PUT, "/users/me").authenticated()  // allow any authenticated user to update their own profile
+                        // Project related endpoints:
+                        .requestMatchers(HttpMethod.GET,"/projects").authenticated()  // any authenticated user can get all projects
+                        .requestMatchers(HttpMethod.GET,"/projects/{id}").authenticated()  // any authenticated user can get a project by ID
+                        .requestMatchers(HttpMethod.POST, "/projects").hasRole("COMPOSER") // only composer can create projects.
+                        .requestMatchers(HttpMethod.PUT, "/projects/{id}").hasRole("COMPOSER")// only composers can update their projects.
+                        .requestMatchers(HttpMethod.DELETE, "/projects/{id}").hasRole("COMPOSER") // Only composers can delete projects.
+
+                        // Track related endpoints:
+                        .requestMatchers(HttpMethod.GET,"/projects/{projectId}/tracks").authenticated() // Any authenticated user can get tracks for a project.
+                        .requestMatchers(HttpMethod.GET, "/projects/{projectId}/tracks/{id}").authenticated()// Any authenticated user can get a track.
+                        .requestMatchers(HttpMethod.POST, "/projects/{projectId}/tracks").hasRole("COMPOSER") // only composers can add tracks
+                        .requestMatchers(HttpMethod.PUT, "/projects/{projectId}/tracks/{id}").hasRole("COMPOSER") // Only composers can update their tracks.
+                        .requestMatchers(HttpMethod.DELETE,"/projects/{projectId}/tracks/{id}").hasRole("COMPOSER")// only composers can delete their tracks.
+                        // Admin related endpoints:
+                        .requestMatchers(HttpMethod.GET,"/users").hasRole("ADMIN")// only admins can get all users.
+                        .requestMatchers(HttpMethod.PUT,"/users/{id}").hasRole("ADMIN") // only admins can update users.
+                        .requestMatchers(HttpMethod.DELETE,"/users/{id}").hasRole("ADMIN")
+                        .anyRequest().authenticated() // any authenticated user can access any other endpoint.
                 )
             .sessionManagement(session ->  session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
