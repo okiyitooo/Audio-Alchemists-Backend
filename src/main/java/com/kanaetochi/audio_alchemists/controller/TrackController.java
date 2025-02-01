@@ -4,6 +4,8 @@ import com.kanaetochi.audio_alchemists.dto.TrackDto;
 import com.kanaetochi.audio_alchemists.model.Track;
 import com.kanaetochi.audio_alchemists.service.TrackService;
 
+import lombok.RequiredArgsConstructor;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,17 +18,12 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/projects/{projectId}/tracks")
+@RequiredArgsConstructor
 public class TrackController {
 
 
     final private TrackService trackService;
     final private ModelMapper modelMapper;
-
-    public TrackController(TrackService trackService, ModelMapper modelMapper) {
-        this.trackService = trackService;
-        this.modelMapper = modelMapper;
-    }
-
 
     @PostMapping
     @PreAuthorize("hasAuthority('COMPOSER')") // Only composers can create tracks
