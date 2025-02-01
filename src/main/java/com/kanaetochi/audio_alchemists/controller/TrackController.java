@@ -1,7 +1,10 @@
 package com.kanaetochi.audio_alchemists.controller;
 
+import com.kanaetochi.audio_alchemists.dto.TrackDto;
 import com.kanaetochi.audio_alchemists.model.Track;
 import com.kanaetochi.audio_alchemists.service.TrackService;
+
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,43 +20,43 @@ public class TrackController {
 
 
     final private TrackService trackService;
-    public TrackController(TrackService trackService) {
+    final private ModelMapper modelMapper;
+
+    public TrackController(TrackService trackService, ModelMapper modelMapper) {
         this.trackService = trackService;
+        this.modelMapper = modelMapper;
     }
 
 
     @PostMapping
     @PreAuthorize("hasAuthority('COMPOSER')") // Only composers can create tracks
-    public ResponseEntity<Track> createTrack(@PathVariable Long projectId, @RequestBody Track track){
+    public ResponseEntity<TrackDto> createTrack(@PathVariable Long projectId, @RequestBody Track track){
        Track newTrack = trackService.createTrack(track, projectId);
-        return new ResponseEntity<>(newTrack, HttpStatus.CREATED);
+        return new ResponseEntity<>(modelMapper.map(newTrack, TrackDto.class), HttpStatus.CREATED);
     }
 
 
     @GetMapping
-    public ResponseEntity<List<Track>> getAllTracks(@PathVariable Long projectId){
-      List<Track> tracks =  trackService.getAllTracksByProject(projectId);
-        return new ResponseEntity<>(tracks, HttpStatus.OK);
+    public ResponseEntity<List<TrackDto>> getAllTracks(@PathVariable Long projectId){
+        List<Track> tracks =  trackService.getAllTracksByProject(projectId);
+        List<TrackDto> trackDtos = tracks.stream().map(track -> modelMapper.map(track, TrackDto.class)).toList();
+        return new ResponseEntity<>(trackDtos, HttpStatus.OK);
     }
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<Track> getTrackById(@PathVariable Long id){
-      Optional<Track> track = trackService.getTrackById(id);
-       return track.map(t -> new ResponseEntity<>(t, HttpStatus.OK))
-               .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    public ResponseEntity<TrackDto> getTrackById(@PathVariable Long id){
+        Optional<Track> track = trackService.getTrackById(id);
+        return track.map(t -> new ResponseEntity<>(modelMapper.map(t, TrackDto.class), HttpStatus.OK))
+            .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
 
     }
 
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('COMPOSER')") // Only composers can update their tracks
-    public ResponseEntity<Track> updateTrack(@PathVariable Long id, @RequestBody Track trackDetails){
-      Optional<Track> existingTrack = trackService.getTrackById(id);
-      return existingTrack.map(t -> {
-          Track updatedTrack = trackService.updateTrack(id,trackDetails);
-          return  new ResponseEntity<>(updatedTrack, HttpStatus.OK);
-      }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    public ResponseEntity<TrackDto> updateTrack(@PathVariable Long id, @RequestBody Track trackDetails){
+        return new ResponseEntity<>(modelMapper.map(trackService.updateTrack(id, trackDetails), TrackDto.class), HttpStatus.OK);
 
     }
 

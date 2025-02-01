@@ -2,6 +2,7 @@ package com.kanaetochi.audio_alchemists.controller;
 
 import java.util.List;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -9,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kanaetochi.audio_alchemists.dto.UserDto;
 import com.kanaetochi.audio_alchemists.exception.ResourceNotFoundException;
 import com.kanaetochi.audio_alchemists.model.User;
 import com.kanaetochi.audio_alchemists.service.UserService;
@@ -27,32 +29,30 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final ModelMapper modelMapper;
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public List<UserDto> getAllUsers() {
+        return userService.getAllUsers().stream().map(user -> modelMapper.map(user, UserDto.class)).toList();
     }
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable("id") long userId){
+    public ResponseEntity<UserDto> getUserById(@PathVariable("id") long userId){
        return userService.getUserById(userId)
-               .map(user -> new ResponseEntity<>(user, HttpStatus.OK))
+               .map(user -> new ResponseEntity<>(modelMapper.map(user, UserDto.class), HttpStatus.OK))
                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable("id") long id, @RequestBody User userDetails){
-        try {
-            User updatedUser = userService.updateUser(id, userDetails);
-            return  new ResponseEntity<>(updatedUser, HttpStatus.OK);
-        } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<UserDto> updateUser(@PathVariable("id") long id, @RequestBody User userDetails){
+        User updatedUser = userService.updateUser(id, userDetails);
+        UserDto userDto = modelMapper.map(updatedUser, UserDto.class);
+        return  new ResponseEntity<>(userDto, HttpStatus.OK);
     }
 
     @PutMapping("/me")
-    public ResponseEntity<User> updateCurrentUser(@AuthenticationPrincipal User authenticatedUser, @RequestBody User userDetails){
+    public ResponseEntity<UserDto> updateCurrentUser(@AuthenticationPrincipal User authenticatedUser, @RequestBody User userDetails){
         if (authenticatedUser == null) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         } 
@@ -61,7 +61,8 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         User updatedUser = userService.updateUser(authenticatedUser.getId(), userDetails);
-        return  new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        UserDto userDto = modelMapper.map(updatedUser, UserDto.class);
+        return  new ResponseEntity<>(userDto, HttpStatus.OK);
     }
 
 
