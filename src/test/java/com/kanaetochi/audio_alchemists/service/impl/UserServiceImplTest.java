@@ -53,6 +53,7 @@ public class UserServiceImplTest {
         registerDto.setUsername(user.getUsername());
         registerDto.setEmail(user.getEmail());
         registerDto.setPassword(user.getPassword());
+        registerDto.setRole(user.getRole().name());
         User registeredUser = userService.registerUser(registerDto);
         assertNotNull(registeredUser);
         assertEquals(registeredUser.getUsername(), user.getUsername());
