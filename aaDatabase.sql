@@ -5,7 +5,7 @@ CREATE DATABASE audio_alchemists;
 \c audio_alchemists;
 
 -- Create the User table
-CREATE TABLE "user" (
+CREATE TABLE "users" (
     id SERIAL PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -18,22 +18,22 @@ CREATE TABLE "user" (
 
 
 -- Create the Project table
-CREATE TABLE project (
+CREATE TABLE projects (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     genre VARCHAR(255),
     tempo INTEGER,
-    owner_id INTEGER REFERENCES "user"(id) NOT NULL,
+    owner_id INTEGER REFERENCES "users"(id) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 
 -- Create the Track table
-CREATE TABLE track (
+CREATE TABLE tracks (
     id SERIAL PRIMARY KEY,
-    project_id INTEGER REFERENCES project(id) NOT NULL,
+    project_id INTEGER REFERENCES projects(id) NOT NULL,
     instrument VARCHAR(255),
     musical_sequence JSONB, -- Store musical data as JSON
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -43,7 +43,7 @@ CREATE TABLE track (
 -- Create the ProjectVersion table
 CREATE TABLE project_version (
     id SERIAL PRIMARY KEY,
-    project_id INTEGER REFERENCES project(id) NOT NULL,
+    project_id INTEGER REFERENCES projects(id) NOT NULL,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     data JSONB -- Store project snapshot as JSON
 );
@@ -51,8 +51,8 @@ CREATE TABLE project_version (
 -- Create the TrackChange table
 CREATE TABLE track_change (
     id SERIAL PRIMARY KEY,
-    track_id INTEGER REFERENCES track(id) NOT NULL,
-    user_id INTEGER REFERENCES "user"(id) NOT NULL,
+    track_id INTEGER REFERENCES tracks(id) NOT NULL,
+    user_id INTEGER REFERENCES "users"(id) NOT NULL,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     change_type VARCHAR(20) NOT NULL, -- 'ADD', 'DELETE', 'MODIFY'
     data JSONB -- Store change details as JSON
@@ -60,8 +60,8 @@ CREATE TABLE track_change (
 
 -- Create the Collaboration table (for many-to-many relationship)
 CREATE TABLE collaboration (
-    user_id INTEGER REFERENCES "user"(id) NOT NULL,
-    project_id INTEGER REFERENCES project(id) NOT NULL,
+    user_id INTEGER REFERENCES "users"(id) NOT NULL,
+    project_id INTEGER REFERENCES projects(id) NOT NULL,
     role VARCHAR(50),  -- e.g., 'EDITOR', 'VIEWER'
     PRIMARY KEY (user_id, project_id)
 );
@@ -69,8 +69,8 @@ CREATE TABLE collaboration (
 
 -- Create the Follow table (for many-to-many relationship)
 CREATE TABLE follow (
-    follower_id INTEGER REFERENCES "user"(id) NOT NULL,
-    following_id INTEGER REFERENCES "user"(id) NOT NULL,
+    follower_id INTEGER REFERENCES "users"(id) NOT NULL,
+    following_id INTEGER REFERENCES "users"(id) NOT NULL,
     PRIMARY KEY (follower_id, following_id)
 );
 
@@ -78,8 +78,8 @@ CREATE TABLE follow (
 -- Create the Comment table
 CREATE TABLE comment (
     id SERIAL PRIMARY KEY,
-    project_id INTEGER REFERENCES project(id) NOT NULL,
-    user_id INTEGER REFERENCES "user"(id) NOT NULL,
+    project_id INTEGER REFERENCES projects(id) NOT NULL,
+    user_id INTEGER REFERENCES "users"(id) NOT NULL,
     text TEXT NOT NULL,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -98,18 +98,18 @@ END;
 $$ language 'plpgsql';
 
 CREATE TRIGGER update_user_updated_at
-BEFORE UPDATE ON "user"
+BEFORE UPDATE ON "users"
 FOR EACH ROW
 EXECUTE PROCEDURE update_updated_at_column();
 
 -- Repeat the trigger creation for project, track
 
 CREATE TRIGGER update_project_updated_at
-BEFORE UPDATE ON project
+BEFORE UPDATE ON projects
 FOR EACH ROW
 EXECUTE PROCEDURE update_updated_at_column();
 
 CREATE TRIGGER update_track_updated_at
-BEFORE UPDATE ON track
+BEFORE UPDATE ON tracks
 FOR EACH ROW
 EXECUTE PROCEDURE update_updated_at_column();
