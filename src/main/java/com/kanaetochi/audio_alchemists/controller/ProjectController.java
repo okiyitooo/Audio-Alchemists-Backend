@@ -1,8 +1,10 @@
 package com.kanaetochi.audio_alchemists.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kanaetochi.audio_alchemists.dto.CollaborationMessage;
 import com.kanaetochi.audio_alchemists.dto.ProjectDto;
 import com.kanaetochi.audio_alchemists.model.Project;
 import com.kanaetochi.audio_alchemists.model.User;
@@ -15,6 +17,8 @@ import java.net.URI;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class ProjectController {
     private final ProjectService projectService;
     private final ModelMapper modelMapper;
+    final private SimpMessagingTemplate template;
 
     @PostMapping
     public ResponseEntity<ProjectDto> createProject(@RequestBody Project projectDetails, @AuthenticationPrincipal User autheticatedUser) {
@@ -63,5 +68,26 @@ public class ProjectController {
     public ResponseEntity<?> deleteProject(@PathVariable Long id) {
         projectService.deleteProject(id);
         return ResponseEntity.ok().body("Project deleted successfully");
+    }
+    @PostMapping("/{projectId}/collaborators")
+    @PreAuthorize("hasAuthority('COMPOSER')")
+    public ResponseEntity<?> addColaborator(@PathVariable Long projectId, @RequestParam Long userId, @RequestParam String role) {
+        sendCollaborationMessage(projectId, userId, "ADD", role);
+        return ResponseEntity.ok().body("Collaborator added successfully");
+    }
+    @DeleteMapping("/{projectId}/collaborators")
+    @PreAuthorize("hasAuthority('COMPOSER')")
+    public ResponseEntity<?> removeCollaborator(@PathVariable Long projectId, @RequestParam Long userId, @RequestParam String role) {
+        sendCollaborationMessage(projectId, userId, "REMOVE", role);
+        return ResponseEntity.ok().body("Collaborator removed successfully");
+    }
+    private void sendCollaborationMessage(Long projectId, Long userId, String actionType, String role) {
+        CollaborationMessage message = CollaborationMessage.builder()
+                .projectId(projectId)
+                .userId(userId)
+                .actionType(actionType)
+                .role(role)
+                .build();
+        template.convertAndSend("/topic/project"+projectId, message);
     }
 }
