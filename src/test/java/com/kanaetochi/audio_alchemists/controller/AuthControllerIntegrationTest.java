@@ -3,6 +3,7 @@ package com.kanaetochi.audio_alchemists.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kanaetochi.audio_alchemists.dto.LoginDto;
 import com.kanaetochi.audio_alchemists.dto.RegisterDto;
+import com.kanaetochi.audio_alchemists.repository.ProjectRepository;
 import com.kanaetochi.audio_alchemists.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,9 +30,12 @@ public class AuthControllerIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private ProjectRepository projectRepository;
 
     @BeforeEach
     void setup(){
+        projectRepository.deleteAll();
         userRepository.deleteAll();
     }
 
