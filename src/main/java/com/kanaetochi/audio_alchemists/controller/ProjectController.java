@@ -8,6 +8,7 @@ import com.kanaetochi.audio_alchemists.dto.CollaborationMessage;
 import com.kanaetochi.audio_alchemists.dto.ProjectDto;
 import com.kanaetochi.audio_alchemists.model.Project;
 import com.kanaetochi.audio_alchemists.model.User;
+import com.kanaetochi.audio_alchemists.security.UserDetailsImpl;
 import com.kanaetochi.audio_alchemists.service.ProjectService;
 
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -82,9 +85,15 @@ public class ProjectController {
         return ResponseEntity.ok().body("Collaborator removed successfully");
     }
     private void sendCollaborationMessage(Long projectId, Long userId, String actionType, String role) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long authenticationUserId = null;
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            authenticationUserId = userDetails.getId();
+        }
         CollaborationMessage message = CollaborationMessage.builder()
                 .projectId(projectId)
-                .userId(userId)
+                .userId(authenticationUserId)
                 .actionType(actionType)
                 .role(role)
                 .build();
