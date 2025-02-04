@@ -3,8 +3,10 @@ package com.kanaetochi.audio_alchemists.service.impl;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
+import com.kanaetochi.audio_alchemists.exception.ConcurrentEditException;
 import com.kanaetochi.audio_alchemists.exception.ResourceNotFoundException;
 import com.kanaetochi.audio_alchemists.model.Project;
 import com.kanaetochi.audio_alchemists.model.Track;
@@ -40,10 +42,14 @@ public class TrackServiceImpl implements TrackService {
 
     @Override
     public Track updateTrack(Long id, Track trackDetails) {
-        Track track = trackRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Track", "id", id));
-        track.setInstrument(trackDetails.getInstrument());
-        track.setMusicalSequence(trackDetails.getMusicalSequence());
-        return trackRepository.save(track);
+        try {
+            Track track = trackRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Track", "id", id));
+            track.setInstrument(trackDetails.getInstrument());
+            track.setMusicalSequence(trackDetails.getMusicalSequence());
+            return trackRepository.save(track);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new ConcurrentEditException("The track has been modified by another user. Please refresh your changes.");
+        }
     }
 
     @Override
