@@ -49,7 +49,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/projects").hasAnyAuthority("COMPOSER", "ADMIN") // only composer can create projects.
                         .requestMatchers(HttpMethod.PUT, "/projects/{id}").hasAnyAuthority("COMPOSER", "ADMIN")// only composers can update their projects.
                         .requestMatchers(HttpMethod.DELETE, "/projects/{id}").hasAnyAuthority("COMPOSER", "ADMIN") // Only composers can delete projects.
-
+                        // Comment related endpoints
+                        .requestMatchers(HttpMethod.POST, "/projects/{projectId}/comments").authenticated() // any authenticated user can create a comment.
+                        .requestMatchers(HttpMethod.GET, "/projects/{projectId}/comments").authenticated() // any authenticated user can get comments.
+                        .requestMatchers(HttpMethod.DELETE, "/projects/{projectId}/comments/{id}").authenticated() // any authenticated user can delete a comment.
                         // Track related endpoints:
                         .requestMatchers(HttpMethod.GET,"/projects/{projectId}/tracks").authenticated() // Any authenticated user can get tracks for a project.
                         .requestMatchers(HttpMethod.GET, "/projects/{projectId}/tracks/{id}").authenticated()// Any authenticated user can get a track.

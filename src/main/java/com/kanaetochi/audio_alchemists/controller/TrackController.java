@@ -1,5 +1,6 @@
 package com.kanaetochi.audio_alchemists.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kanaetochi.audio_alchemists.dto.TrackChangeMessage;
 import com.kanaetochi.audio_alchemists.dto.TrackDto;
 import com.kanaetochi.audio_alchemists.model.Track;
@@ -28,6 +29,7 @@ public class TrackController {
     final private TrackService trackService;
     final private ModelMapper modelMapper;
     private final SimpMessagingTemplate simpMessagingTemplate;
+    private final ObjectMapper objectMapper;
 
     @PostMapping
     @PreAuthorize("hasAuthority('COMPOSER')") // Only composers can create tracks
@@ -84,9 +86,16 @@ public class TrackController {
         TrackChangeMessage trackChangeMessage = TrackChangeMessage.builder()
                 .trackId(trackId)
                 .changeType(changeType)
-                .data(data.toString())
+                .data(convertObjectToJson(data))
                 .userId(userId)
                 .build();
         simpMessagingTemplate.convertAndSend("/topic/track" + trackId, trackChangeMessage);
+    }
+    private String convertObjectToJson(Object data){
+        try {
+            return objectMapper.writeValueAsString(data);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
