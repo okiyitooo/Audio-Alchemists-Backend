@@ -6,6 +6,7 @@ import com.kanaetochi.audio_alchemists.dto.RegisterDto;
 import com.kanaetochi.audio_alchemists.model.Project;
 import com.kanaetochi.audio_alchemists.repository.ProjectRepository;
 import com.kanaetochi.audio_alchemists.repository.UserRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -144,40 +145,91 @@ public class ProjectControllerIntegrationTest {
                 .andExpect(jsonPath("$.description").value("updatedDescription"));
 
     }
-    @Test
-   @WithMockUser(username = "testuser", roles = {"USER"})
-    void testUpdateProjectNotFound() throws Exception {
-        Project updatedProject = Project.builder()
-                .title("updatedProject")
-                .description("updatedDescription")
-                .genre("updatedGenre")
-                .tempo(130)
-                .build();
-        mockMvc.perform(MockMvcRequestBuilders.put("/projects/2")
-                        .header("Authorization", token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updatedProject)))
-                .andExpect(status().isNotFound());
-    }
+        @Test
+        @WithMockUser(username = "testuser", roles = {"USER"})
+        void testUpdateProjectNotFound() throws Exception {
+                Project updatedProject = Project.builder()
+                        .title("updatedProject")
+                        .description("updatedDescription")
+                        .genre("updatedGenre")
+                        .tempo(130)
+                        .build();
+                mockMvc.perform(MockMvcRequestBuilders.put("/projects/2")
+                                .header("Authorization", token)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updatedProject)))
+                        .andExpect(status().isNotFound());
+        }
 
-    @Test
-    @WithMockUser(username = "testuser", roles = {"USER"})
-    void testDeleteProject() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.delete("/projects/{id}", id)
-                        .header("Authorization", token)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Project deleted successfully"));
-        assertEquals(projectRepository.findAll().size(), 0);
-    }
+        @Test
+        @WithMockUser(username = "testuser", roles = {"USER"})
+        void testDeleteProject() throws Exception {
+                mockMvc.perform(MockMvcRequestBuilders.delete("/projects/{id}", id)
+                                .header("Authorization", token)
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(content().string("Project deleted successfully"));
+                assertEquals(projectRepository.findAll().size(), 0);
+        }
 
-   @Test
-   @WithMockUser(username = "testuser", roles = {"USER"})
-   void testDeleteProjectNotFound() throws Exception {
-       mockMvc.perform(MockMvcRequestBuilders.delete("/projects/2")
-                       .header("Authorization", token)
-                       .contentType(MediaType.APPLICATION_JSON))
-               .andExpect(status().isNotFound());
-   }
+        @Test
+        @WithMockUser(username = "testuser", roles = {"USER"})
+        void testDeleteProjectNotFound() throws Exception {
+                mockMvc.perform(MockMvcRequestBuilders.delete("/projects/2")
+                                .header("Authorization", token)
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isNotFound());
+        }
 
+        @Test
+        @WithMockUser(username = "testuser", roles = {"USER"})
+        void testAddCollaborator() throws Exception {
+                RegisterDto registerDto = new RegisterDto();
+                registerDto.setUsername("collaborator");
+                registerDto.setEmail("collaborator@example.com");
+                registerDto.setPassword("password");
+                registerDto.setRole("COMPOSER");
+                mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(registerDto)))
+                        .andExpect(status().isOk());
+                LoginDto loginDto = new LoginDto();
+                loginDto.setUsernameOrEmail("collaborator");
+                loginDto.setPassword("password");
+                Long userId = userRepository.findByUsername("collaborator").get().getId();
+                mockMvc.perform(MockMvcRequestBuilders.post("/projects/{id}/collaborators?userId={userId}&role=EDITOR", id, userId)
+                                .header("Authorization", token)
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(content().string("Collaborator added successfully"));
+        }
+
+        @Test
+        @WithMockUser(username = "testuser", roles = {"USER"})
+        void testRemoveCollaborator() throws Exception {
+                RegisterDto registerDto = new RegisterDto();
+                registerDto.setUsername("collaborator");
+                registerDto.setEmail("collaborator@example.com");
+                registerDto.setPassword("password");
+                registerDto.setRole("COMPOSER");
+                mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(registerDto)))
+                        .andExpect(status().isOk());
+                LoginDto loginDto = new LoginDto();
+                loginDto.setUsernameOrEmail("collaborator");
+                loginDto.setPassword("password");
+                Long userId = userRepository.findByUsername("collaborator").get().getId();
+                mockMvc.perform(MockMvcRequestBuilders.post("/projects/{id}/collaborators?userId={userId}&role=EDITOR", id, userId)
+                                .header("Authorization", token)
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(content().string("Collaborator added successfully"));
+                mockMvc.perform(MockMvcRequestBuilders.delete("/projects/{id}/collaborators?userId={userId}&role=EDITOR", id, userId)
+                                .header("Authorization", token)
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(content().string("Collaborator removed successfully"));
+
+        }
 }
