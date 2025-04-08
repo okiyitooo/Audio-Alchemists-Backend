@@ -20,4 +20,11 @@ public interface FollowRepository extends JpaRepository<Follow, FollowId> {
     @Query("SELECT DISTINCT f.following.id FROM Follow f WHERE f.follower.id IN :followerIds")
     Set<Long> findFollowingIdsByFollowerIds(@Param("followerIds") Set<Long> followerIds); // Use Set for input as well
 
+    // Find users following the given user
+    @Query("SELECT f.follower.id FROM Follow f WHERE f.following.id = :userId")
+    Set<Long> findFollowerIdsByFollowingId(@Param("userId") Long userId);
+
+    // Find users followed by a list of users (for follows-of-follows)
+    @Query("SELECT DISTINCT f.follower.id FROM Follow f WHERE f.following.id IN :followingIds")
+    Set<Long> findFollowerIdsByFollowingIds(@Param("followingIds") Set<Long> followingIds); // Use Set for input
 }
