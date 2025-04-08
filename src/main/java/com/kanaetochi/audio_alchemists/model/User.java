@@ -48,6 +48,8 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+    private String preferences; // JSON string for user preferences
+    private String profilePicture; // URL or path to the profile picture
 
     @Override
     @JsonIgnore

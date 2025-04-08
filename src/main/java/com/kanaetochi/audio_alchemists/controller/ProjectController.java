@@ -6,14 +6,20 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kanaetochi.audio_alchemists.dto.CollaborationMessage;
 import com.kanaetochi.audio_alchemists.dto.ProjectDto;
+import com.kanaetochi.audio_alchemists.dto.ProjectVersionDto;
+import com.kanaetochi.audio_alchemists.dto.SaveVersionRequestDto;
 import com.kanaetochi.audio_alchemists.model.Project;
+import com.kanaetochi.audio_alchemists.model.ProjectVersion;
 import com.kanaetochi.audio_alchemists.model.User;
 import com.kanaetochi.audio_alchemists.security.UserDetailsImpl;
 import com.kanaetochi.audio_alchemists.service.ProjectService;
+import com.kanaetochi.audio_alchemists.service.ProjectVersionService;
 
 import lombok.RequiredArgsConstructor;
 
 import java.net.URI;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -36,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RequestMapping("/projects")
 public class ProjectController {
     private final ProjectService projectService;
+    private final ProjectVersionService projectVersionService;
     private final ModelMapper modelMapper;
     final private SimpMessagingTemplate template;
 
@@ -62,6 +69,47 @@ public class ProjectController {
                })
                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
+    @GetMapping("/{id}/versions")
+    @PreAuthorize("hasAuthority('COMPOSER') or hasAuthority('ADMIN') or @projectAccessChecker.canViewProject(authentication, #id)")
+    public ResponseEntity<?> getProjectVersions(@PathVariable Long id) {
+        List<ProjectVersion> versions = projectVersionService.getVersionsForProject(id);
+        List<ProjectVersionDto> versionDtos = versions.stream()
+                .map(version -> modelMapper.map(version, ProjectVersionDto.class))
+                .toList();
+        return ResponseEntity.ok(versionDtos);
+    }
+    @GetMapping("/search")
+    @PreAuthorize("isAuthenticated()") // Allow any logged-in user to search
+    public ResponseEntity<List<ProjectDto>> searchForProjects(@RequestParam String query) {
+        List<Project> projects = projectService.searchProjects(query);
+        List<ProjectDto> projectDtos = projects.stream()
+                .map(project -> modelMapper.map(project, ProjectDto.class))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(projectDtos);
+    }
+    @PostMapping("/{id}/revert/{versionId}")
+    @PreAuthorize("hasAuthority('COMPOSER') or hasAuthority('ADMIN') or @projectAccessChecker.canEditProject(authentication, #id)")
+    public ResponseEntity<ProjectDto> revertProject(@PathVariable Long id, @PathVariable Long versionId, @AuthenticationPrincipal User currUser) {
+        if (currUser == null) { 
+            return ResponseEntity.status(401).build();
+        }
+
+        Project revertedProject = projectVersionService.revertToVersion(id, versionId, currUser);
+        ProjectDto projectDto = modelMapper.map(revertedProject, ProjectDto.class);
+        return ResponseEntity.ok(projectDto);
+    }
+    @PostMapping("/{id}/versions")
+    @PreAuthorize("hasAuthority('COMPOSER') or hasAuthority('ADMIN') or @projectAccessChecker.canEditProject(authentication, #id)")
+    public ResponseEntity<Void> saveProjectVersion(@PathVariable Long id, @RequestBody(required = false) SaveVersionRequestDto requestDto, @AuthenticationPrincipal User currUser) {
+        String description = requestDto != null && requestDto.getDescription() != null ? requestDto.getDescription() : "Manual save";
+        if (currUser == null) {
+            return ResponseEntity.status(401).build();
+        }
+        projectService.saveNewVersion(id, description, currUser);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+    
+
     @PutMapping("/{id}")
     public ResponseEntity<ProjectDto> updateProject(@PathVariable Long id, @RequestBody Project projectDetails) {
         Project project = projectService.updateProject(id, projectDetails);
