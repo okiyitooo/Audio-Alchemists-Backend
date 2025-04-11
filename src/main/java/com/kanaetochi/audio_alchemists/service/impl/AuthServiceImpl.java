@@ -9,8 +9,11 @@ import com.kanaetochi.audio_alchemists.dto.LoginDto;
 import com.kanaetochi.audio_alchemists.security.JwtTokenProvider;
 import com.kanaetochi.audio_alchemists.service.AuthService;
 
+import lombok.extern.slf4j.Slf4j;
+
 
 @Service
+@Slf4j
 public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;

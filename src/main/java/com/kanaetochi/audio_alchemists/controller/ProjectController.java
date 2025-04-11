@@ -16,6 +16,7 @@ import com.kanaetochi.audio_alchemists.service.ProjectService;
 import com.kanaetochi.audio_alchemists.service.ProjectVersionService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
 import java.util.List;
@@ -40,6 +41,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/projects")
+@Slf4j
 public class ProjectController {
     private final ProjectService projectService;
     private final ProjectVersionService projectVersionService;
