@@ -1,5 +1,6 @@
 package com.kanaetochi.audio_alchemists.service.impl;
 
+import org.modelmapper.ModelMapper;
 // import org.springframework.security.core.Authentication;
 // import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -16,8 +17,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.kanaetochi.audio_alchemists.dto.ProjectVersionDto;
 import com.kanaetochi.audio_alchemists.exception.ResourceNotFoundException;
 import com.kanaetochi.audio_alchemists.model.Project;
+import com.kanaetochi.audio_alchemists.model.ProjectVersion;
 import com.kanaetochi.audio_alchemists.model.User;
 import com.kanaetochi.audio_alchemists.repository.ProjectRepository;
 import com.kanaetochi.audio_alchemists.repository.UserRepository;
@@ -31,6 +34,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
 	private final ProjectVersionService projectVersionService;
+	private final ModelMapper modelMapper;
 
 	private static final ThreadLocal<Boolean> isReverting = ThreadLocal.withInitial(() -> false);
 	@Override
@@ -97,11 +101,13 @@ public class ProjectServiceImpl implements ProjectService {
 
 	@Override
 	@Transactional
-	public void saveNewVersion(Long projectId, String description, User savedBy) {
+	public ProjectVersionDto saveNewVersion(Long projectId, String description, User savedBy) {
 		Project project = projectRepository.findById(projectId).orElseThrow(()-> new ResourceNotFoundException("Project", "id", projectId));
 
-		projectVersionService.createSnapShot(project, savedBy, description);
-		log.info("Explicily saved new version for project ID: {} by user: {}", projectId, savedBy != null ? savedBy.getUsername() : "system");
+		ProjectVersion version = projectVersionService.createSnapShot(project, savedBy, description);
+		log.info("Explicitly saved new version for project ID: {} by user: {}", projectId, savedBy != null ? savedBy.getUsername() : "system");
+
+		return modelMapper.map(version, ProjectVersionDto.class);
 	}
 
 	@Override

@@ -3,6 +3,7 @@ package com.kanaetochi.audio_alchemists.service;
 import java.util.List;
 import java.util.Optional;
 
+import com.kanaetochi.audio_alchemists.dto.ProjectVersionDto;
 import com.kanaetochi.audio_alchemists.model.Project;
 import com.kanaetochi.audio_alchemists.model.User;
 
@@ -12,6 +13,6 @@ public interface ProjectService {
     Optional<Project> getProjectById(Long id);
     Project updateProject(Long id, Project projectDetails);
     void deleteProject(Long id);
-    void saveNewVersion(Long projectId, String description, User savedBy);
+    ProjectVersionDto saveNewVersion(Long projectId, String description, User savedBy);
     List<Project> searchProjects(String query);
 }

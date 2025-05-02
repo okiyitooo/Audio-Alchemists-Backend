@@ -49,6 +49,7 @@ public class SecurityConfig {
                         // User related endpoints:
                         .requestMatchers(HttpMethod.GET, "/users/{id}").authenticated() // Any authenticated user can get a user by ID.
                         .requestMatchers(HttpMethod.PUT, "/users/me").authenticated()  // allow any authenticated user to update their own profile
+                        .requestMatchers(HttpMethod.GET, "/users/me").authenticated()  // allow any authenticated user to get their own profile
                         // Project related endpoints:
                         .requestMatchers(HttpMethod.GET,"/projects").authenticated()  // any authenticated user can get all projects
                         .requestMatchers(HttpMethod.GET,"/projects/{id}").authenticated()  // any authenticated user can get a project by ID

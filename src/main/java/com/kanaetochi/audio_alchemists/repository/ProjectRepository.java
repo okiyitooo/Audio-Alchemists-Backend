@@ -34,5 +34,6 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
         Pageable pageable
     );
 
+    @Query("SELECT p.id FROM Project p WHERE p.owner.id = :ownerId")
     List<Long> findIdsByOwnerId(Long ownerId); 
 }

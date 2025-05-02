@@ -102,13 +102,13 @@ public class ProjectController {
     }
     @PostMapping("/{id}/versions")
     @PreAuthorize("hasAuthority('COMPOSER') or hasAuthority('ADMIN') or @projectAccessChecker.canEditProject(authentication, #id)")
-    public ResponseEntity<Void> saveProjectVersion(@PathVariable Long id, @RequestBody(required = false) SaveVersionRequestDto requestDto, @AuthenticationPrincipal User currUser) {
+    public ResponseEntity<?> saveProjectVersion(@PathVariable Long id, @RequestBody(required = false) SaveVersionRequestDto requestDto, @AuthenticationPrincipal User currUser) {
         String description = requestDto != null && requestDto.getDescription() != null ? requestDto.getDescription() : "Manual save";
         if (currUser == null) {
             return ResponseEntity.status(401).build();
         }
-        projectService.saveNewVersion(id, description, currUser);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        ProjectVersionDto version =projectService.saveNewVersion(id, description, currUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(version);
     }
     
 

@@ -3,7 +3,6 @@ package com.kanaetochi.audio_alchemists.controller;
 import com.kanaetochi.audio_alchemists.dto.RecommendedProjectDto;
 import com.kanaetochi.audio_alchemists.dto.RecommendedUserDto;
 import com.kanaetochi.audio_alchemists.model.User; // Import User
-import com.kanaetochi.audio_alchemists.security.UserDetailsImpl;
 import com.kanaetochi.audio_alchemists.service.RecommendationService;
 import com.kanaetochi.audio_alchemists.service.UserService;
 
@@ -29,7 +28,7 @@ public class RecommendationController {
 
     @GetMapping("/projects")
     public ResponseEntity<List<RecommendedProjectDto>> getProjectRecommendations(
-            @AuthenticationPrincipal UserDetailsImpl currentUser,
+            @AuthenticationPrincipal User currentUser,
             @RequestParam(defaultValue = "5") int limit) {
 
         if (currentUser == null) return ResponseEntity.status(401).build();
@@ -47,7 +46,7 @@ public class RecommendationController {
 
     @GetMapping("/users")
     public ResponseEntity<List<RecommendedUserDto>> getUserRecommendations(
-            @AuthenticationPrincipal UserDetailsImpl currentUser,
+            @AuthenticationPrincipal User currentUser,
             @RequestParam(defaultValue = "5") int limit) {
 
         if (currentUser == null) return ResponseEntity.status(401).build();

@@ -43,6 +43,13 @@ public class UserController {
                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getCurrentUser(@AuthenticationPrincipal User authenticatedUser) {
+        if (authenticatedUser==null) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(modelMapper.map(authenticatedUser, UserDto.class), HttpStatus.OK);
+    }
+    
+
 
     @PutMapping("/{id}")
     public ResponseEntity<UserDto> updateUser(@PathVariable("id") long id, @RequestBody User userDetails){

@@ -60,9 +60,10 @@ public class TrackController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('COMPOSER')") // Only composers can update their tracks
-    public ResponseEntity<TrackDto> updateTrack(@PathVariable Long id, @RequestBody Track trackDetails){
+    public ResponseEntity<TrackDto> updateTrack(@PathVariable Long id, @RequestBody TrackDto trackDto){
+        Track trackDetails = modelMapper.map(trackDto, Track.class);
         Track updatedTrack = trackService.updateTrack(id, trackDetails);
-        TrackDto trackDto = modelMapper.map(updatedTrack, TrackDto.class);
+        trackDto = modelMapper.map(updatedTrack, TrackDto.class);
         sendTrackChangeMessage(updatedTrack.getId(), "MODIFY", trackDto);
         return new ResponseEntity<>(trackDto, HttpStatus.OK);
 
